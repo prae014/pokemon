@@ -6,16 +6,18 @@ package graph
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/prae014/pokemon/graph/model"
 )
 
-func AddType(pokemonTypeInput []*model.PokemonTypeInput) (pokemonType []*model.PokemonType) {
+//TODO: look at ID and stuff
+//TODO: haven't tested update func and whatever came after that
+
+func TypeInputMap(pkmn_type_input []*model.PokemonTypeInput) (pkmn_type []*model.PokemonType) {
 	var pt []*model.PokemonType
 
-	for _, type_input := range pokemonTypeInput {
+	for _, type_input := range pkmn_type_input {
 		t := model.PokemonType{
 			Name: type_input.Name,
 		}
@@ -24,10 +26,10 @@ func AddType(pokemonTypeInput []*model.PokemonTypeInput) (pokemonType []*model.P
 	return pt
 }
 
-func AddAbility(pokemonAbilityInput []*model.PokemonAbilityInput) (pokemonAbility []*model.PokemonAbility) {
+func AbilityInputMap(pkmn_ability_input []*model.PokemonAbilityInput) (pkmn_type []*model.PokemonAbility) {
 	var pa []*model.PokemonAbility
 
-	for _, ability_input := range pokemonAbilityInput {
+	for _, ability_input := range pkmn_ability_input {
 		a := model.PokemonAbility{
 			Name: ability_input.Name,
 		}
@@ -38,13 +40,15 @@ func AddAbility(pokemonAbilityInput []*model.PokemonAbilityInput) (pokemonAbilit
 
 // CreatePokemon is the resolver for the createPokemon field.
 func (r *mutationResolver) CreatePokemon(ctx context.Context, input model.PokemonInput) (*model.Pokemon, error) {
+	//r.DB.Select()
+	//fmt.Println(r.DB)
 
 	new_pkmn := model.Pokemon{
 		Name:        input.Name,
 		Description: input.Description,
 		Category:    input.Category,
-		Type:        AddType(input.Type),
-		Abilities:   AddAbility(input.Abilities),
+		Type:        TypeInputMap(input.Type),
+		Abilities:   AbilityInputMap(input.Abilities),
 	}
 
 	//add to database
@@ -52,8 +56,11 @@ func (r *mutationResolver) CreatePokemon(ctx context.Context, input model.Pokemo
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("hereeeee")
+	fmt.Println(new_pkmn.Name)
 
 	return &new_pkmn, nil
+	//panic(fmt.Errorf("not implemented: CreatePokemon - createPokemon"))
 }
 
 // UpdatePokemon is the resolver for the updatePokemon field.
@@ -70,15 +77,12 @@ func (r *mutationResolver) UpdatePokemon(ctx context.Context, id int, input mode
 		Name:        input.Name,
 		Description: input.Description,
 		Category:    input.Category,
-		Type:        AddType(input.Type),
-		Abilities:   AddAbility(input.Abilities),
+		Type:        TypeInputMap(input.Type),
+		Abilities:   AbilityInputMap(input.Abilities),
 	}
-	err := r.DB.Save(&updated_poke).Error
-
-	if err != nil {
-		return nil, err
-	}
+	r.DB.Save(&updated_poke)
 	return &updated_poke, nil
+	//panic(fmt.Errorf("not implemented: UpdatePokemon - updatePokemon"))
 }
 
 // DeletePokemon is the resolver for the deletePokemon field.
@@ -86,22 +90,20 @@ func (r *mutationResolver) DeletePokemon(ctx context.Context, id int) (bool, err
 	p := r.DB.Delete(&model.Pokemon{}, id)
 	if p.RowsAffected < 1 {
 		fmt.Printf("numbers of row affected: %v\n", p.RowsAffected)
-		err := errors.New("the provided id doesn't exist")
-		return false, err
+		fmt.Println("The provided id doesn't exist")
+		return false, nil //FIXME: nil here is a placeholder
 	}
 	return true, nil
+	//panic(fmt.Errorf("not implemented: DeletePokemon - deletePokemon"))
 }
 
 // Pokemons is the resolver for the pokemons field.
 func (r *queryResolver) Pokemons(ctx context.Context) ([]*model.Pokemon, error) {
 	var all_poke []*model.Pokemon
-	err := r.DB.Preload("Type").Preload("Abilities").Find(&all_poke).Error
-
-	if err != nil {
-		return nil, err
-	}
+	r.DB.Preload("Type").Preload("Abilities").Find(&all_poke)
 
 	return all_poke, nil
+	//panic(fmt.Errorf("not implemented: Pokemons - pokemons"))
 }
 
 // PokemonID is the resolver for the pokemonID field.
@@ -114,6 +116,7 @@ func (r *queryResolver) PokemonID(ctx context.Context, id int) (*model.Pokemon, 
 	}
 	return &poke, nil
 
+	//panic(fmt.Errorf("not implemented: PokemonID - pokemonID"))
 }
 
 // PokemonName is the resolver for the pokemonName field.
@@ -125,6 +128,7 @@ func (r *queryResolver) PokemonName(ctx context.Context, name string) (*model.Po
 		return nil, err
 	}
 	return &poke, nil
+	//panic(fmt.Errorf("not implemented: PokemonName - pokemonName"))
 }
 
 // Mutation returns MutationResolver implementation.
